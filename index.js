@@ -1,4 +1,6 @@
 import express from 'express'
+import cors from 'cors'
+
 const app = express()
 const port = 5001;
 
@@ -51,6 +53,7 @@ const townData = {
 }
 
 // Middleware to parse JSON
+app.use(cors())
 app.use(express.json());
 
 // Endpoint for North area's schedule

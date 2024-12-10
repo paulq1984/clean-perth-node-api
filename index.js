@@ -2,9 +2,9 @@ import express from 'express'
 import cors from 'cors'
 
 const app = express()
-const port = 5001;
+const port = process.env.PORT || 5001;
 
-const townData = {
+const perthData = {
     town: "Perth",
     landfill: {
         address: "666 Wildlife Road, Perth, ON",
@@ -13,7 +13,7 @@ const townData = {
             "Saturday - 8am - 12pm",
             "If a holiday falls on a Monday, the landfill will be closed on the following Tuesday."
         ],
-        notes: "Avilable to Town of Perth residents only. Proof of residency required.",
+        notes: "Avilable to Town of Perth residents only. Proof of residency required."
     },
     binContents: [
         {
@@ -38,7 +38,7 @@ const townData = {
                 "Aluminum pop cans (clean)",
                 "Steel food cans (clean)",
                 "Aluminum foil and trays (clean and empty)",
-                "Gable top and tetra pak cartons - includes milk and juice cartons, drinking boxes and spiral bound containers",
+                "Gable top and tetra pak cartons - includes milk and juice cartons, drinking boxes and spiral bound containers"
             ]
         },
         {
@@ -144,7 +144,7 @@ const townData = {
         ]
     },
     {
-      name: "North",
+      name: "South",
       collectionSchedule: [
           {
               binColor: "Green",
@@ -236,30 +236,89 @@ const townData = {
     ]
 }
 
+
 // Middleware to parse JSON
-app.use(cors())
+app.use(cors({ origin: "http://localhost:3000", methods: "GET, POST"}));
 app.use(express.json());
 
-// Endpoint for North area's schedule
-app.get("/schedule/north", (req, res) => {
-  const northSchedule = townData.areas.find(area => area.name === "North");
-  if (northSchedule) {
-    res.json(northSchedule);
-  } else {
-    res.status(404).json({ message: "North area schedule not found." });
-  }
+app.get("/", (req, res) => {
+    res.json(perthData)
+})
+
+//get bin contents by bin
+app.get("/bins", (req, res) => {
+    const { binColor } = req.query;
+
+    if (!binColor) {
+        return res.status(400).json({ message: "Missing binColor query parameter" });
+    }
+
+    const bin = perthData.binContents.find(item => item.bin.toLowerCase() === binColor.toLowerCase());
+
+    if (bin) {
+        res.json(bin);
+    } else {
+        res.status(404).json({ message: `Bin Color ${binColor} not found` });
+    }
 });
 
-// Endpoint for South area's schedule
-app.get("/schedule/south", (req, res) => {
-  const southSchedule = townData.areas.find(area => area.name === "South");
-  if (southSchedule) {
-    res.json(southSchedule);
-  } else {
-    res.status(404).json({ message: "South area schedule not found." });
-  }
+//Schedule Endpoint
+app.get("/schedule", (req, res) => {
+    const { area } = req.query;
+
+    if (!area) {
+        return res.status(400).json({ message: "Missing area query parameter" });
+    }
+
+    // Find the area by name in the areas array
+    const schedule = perthData.areas.find(
+        item => item.name.toLowerCase() === area.toLowerCase()
+    );
+
+    if (schedule) {
+        res.json(schedule);
+    } else {
+        res.status(404).json({ message: `${area} area schedule not found.` });
+    }
 });
 
+app.get("/binSchedule", (req, res) => {
+    const { area, binColor } = req.query;
+
+    // Validate query parameters
+    if (!area) {
+        return res.status(400).json({ message: "Missing 'area' query parameter." });
+    }
+    if (!binColor) {
+        return res.status(400).json({ message: "Missing 'binColor' query parameter." });
+    }
+
+    // Find the area by name
+    const areaData = perthData.areas.find(
+        item => item.name.toLowerCase() === area.toLowerCase()
+    );
+
+    if (!areaData) {
+        return res.status(404).json({ message: `Area '${area}' not found.` });
+    }
+
+    // Find the bin collection schedule within the area
+    const schedule = areaData.collectionSchedule.find(
+        schedule => schedule.binColor.toLowerCase() === binColor.toLowerCase()
+    );
+
+    if (!schedule) {
+        return res.status(404).json({
+            message: `Bin color '${binColor}' not found in area '${area}'.`
+        });
+    }
+
+    res.json({
+        area: areaData.name,
+        binColor: schedule.binColor,
+        dates: schedule.dates
+    });
+})
 
 // Start the server
 app.listen(port, () => {

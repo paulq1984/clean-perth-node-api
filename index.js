@@ -4,6 +4,8 @@ import cors from 'cors'
 const app = express()
 const port = process.env.PORT || 5001;
 
+const BASE_PATH = '/clean-perth-api';
+
 const perthData = {
     town: "Perth",
     landfill: {
@@ -241,12 +243,12 @@ const perthData = {
 app.use(cors({ origin: "http://localhost:3000", methods: "GET, POST"}));
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get(`${BASE_PATH}/`, (req, res) => {
     res.json(perthData)
 })
 
 //get bin contents by bin
-app.get("/bins", (req, res) => {
+app.get(`${BASE_PATH}/bins`, (req, res) => {
     const { binColor } = req.query;
 
     if (!binColor) {
@@ -263,7 +265,7 @@ app.get("/bins", (req, res) => {
 });
 
 //Schedule Endpoint
-app.get("/schedule", (req, res) => {
+app.get(`${BASE_PATH}/schedule`, (req, res) => {
     const { area } = req.query;
 
     if (!area) {
@@ -282,7 +284,7 @@ app.get("/schedule", (req, res) => {
     }
 });
 
-app.get("/binSchedule", (req, res) => {
+app.get(`${BASE_PATH}/binSchedule`, (req, res) => {
     const { area, binColor } = req.query;
 
     // Validate query parameters
@@ -322,5 +324,5 @@ app.get("/binSchedule", (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Garbage Collection App listening on http://localhost:${port}`);
+  console.log(`App is running on http://localhost:${port}${BASE_PATH}`);
 });

@@ -4,7 +4,7 @@ import cors from 'cors'
 const app = express()
 const port = process.env.PORT || 5001;
 
-const BASE_PATH = '/clean-perth-api';
+const BASE_PATH = '/clean-perth-node-api';
 
 const perthData = {
     town: "Perth",
